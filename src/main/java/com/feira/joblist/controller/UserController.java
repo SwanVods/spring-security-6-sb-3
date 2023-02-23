@@ -31,15 +31,15 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
-        if (userService.getByUsername(userDto.getUsername()) != null) {
+        if (userService.loadUserByUsername(userDto.getUsername()) != null) {
             return ResponseEntity.badRequest().body("Username is already taken");
         }
 
         User user = new User();
         user.setUsername(userDto.getUsername());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        userService.save(user);
-        return ResponseEntity.ok("User registered successfully");
+        String token = userService.save(user);
+        return ResponseEntity.ok().body(token);
     }
 
     @PostMapping("/login")
@@ -54,7 +54,7 @@ public class UserController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.badRequest().body("Incorrect username or password");
         }
-        User user = userService.getByUsername(userdto.getUsername());
+        User user = (User) userService.loadUserByUsername(userdto.getUsername());
         String token = jwtTokenUtil.generateToken(user);
         return ResponseEntity.ok(token);
     }
