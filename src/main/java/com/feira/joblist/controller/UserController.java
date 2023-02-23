@@ -4,11 +4,12 @@ import com.feira.joblist.model.User;
 import com.feira.joblist.model.dto.UserDto;
 import com.feira.joblist.service.UserService;
 import com.feira.joblist.util.JwtTokenUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,18 +17,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) {
@@ -54,7 +51,10 @@ public class UserController {
         } catch (BadCredentialsException e) {
             return ResponseEntity.badRequest().body("Incorrect username or password");
         }
-        User user = (User) userService.loadUserByUsername(userdto.getUsername());
+        User user = new User();
+        UserDetails userDetails = userService.loadUserByUsername(userdto.getUsername());
+        user.setUsername(userDetails.getUsername());
+        user.setPassword(userDetails.getPassword());
         String token = jwtTokenUtil.generateToken(user);
         return ResponseEntity.ok(token);
     }

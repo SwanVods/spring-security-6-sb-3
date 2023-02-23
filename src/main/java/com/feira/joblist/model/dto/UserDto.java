@@ -1,6 +1,5 @@
 package com.feira.joblist.model.dto;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
